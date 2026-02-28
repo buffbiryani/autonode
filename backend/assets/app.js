@@ -130,10 +130,10 @@ function clearPendingTimers() {
 }
 
 function getAgentColor(agent) {
-  if (agent === "HeartbeatMonitor") return "#0ea5e9";
-  if (agent === "DeadZoneMapper") return "#8b5cf6";
-  if (agent === "RootCauseAnalyzer") return "#f59e0b";
-  if (agent === "ReroutingAgent") return "#10b981";
+  if (agent === "PulseAgent") return "#0ea5e9";
+  if (agent === "DeadzoneAgent") return "#8b5cf6";
+  if (agent === "CauseAgent") return "#f59e0b";
+  if (agent === "Rerout Agent") return "#10b981";
   if (agent === "DispatchAgent") return "#ef4444";
   return "#ffffff";
 }
@@ -345,25 +345,25 @@ async function runSimulation() {
 
   if (state.backendReady) {
     try {
-      addLog("HeartbeatMonitor", "Patrol cycle started - scanning 24 sensors", "info");
+      addLog("PulseAgent", "Patrol cycle started - scanning 24 sensors", "info");
       await apiPost("api_simulate_dropout", { sensor_id: "SEN-042" });
-      addLog("HeartbeatMonitor", "SEN-042 last_ping delta exceeded threshold - flagged OFFLINE", "error");
+      addLog("PulseAgent", "SEN-042 last_ping delta exceeded threshold - flagged OFFLINE", "error");
       setSensorPatch("SEN-042", { status: "offline", rssi: -95 });
       render();
 
       await sleep(1000);
-      addLog("DeadZoneMapper", "Mapping dead zone around SEN-042...", "info");
+      addLog("DeadzoneAgent", "Mapping dead zone around SEN-042...", "info");
 
       await sleep(800);
-      addLog("RootCauseAnalyzer", "Analyzing root cause - battery, RSSI, router load...", "info");
+      addLog("CauseAgent", "Analyzing root cause - battery, RSSI, router load...", "info");
 
       const result = await apiPost("api_run_pipeline");
 
       await sleep(600);
       if (result && result.diagnoses && result.diagnoses.length > 0) {
         const diag = result.diagnoses[0];
-        addLog("RootCauseAnalyzer", `cause: ${diag.cause}  confidence: ${Math.round((diag.confidence || 0.78) * 100)}%`, "success");
-        addLog("RootCauseAnalyzer", `action: ${diag.recommended_action}`, "info");
+        addLog("CauseAgent", `cause: ${diag.cause}  confidence: ${Math.round((diag.confidence || 0.78) * 100)}%`, "success");
+        addLog("CauseAgent", `action: ${diag.recommended_action}`, "info");
       }
 
       await sleep(600);
@@ -384,9 +384,9 @@ async function runSimulation() {
         }];
         render();
       } else {
-        addLog("ReroutingAgent", "Attempting mesh reroute...", "info");
+        addLog("Rerout Agent", "Attempting mesh reroute...", "info");
         await sleep(800);
-        addLog("ReroutingAgent", "SEN-042 rerouted. Self-heal SUCCESS ✓", "success");
+        addLog("Rerout Agent", "SEN-042 rerouted. Self-heal SUCCESS ✓", "success");
         setSensorPatch("SEN-042", { status: "degraded" });
         addLog("DispatchAgent", "Self-heal succeeded. No work order required.", "success");
         render();
@@ -401,15 +401,15 @@ async function runSimulation() {
   }
 
   const events = [
-    { t: 0, agent: "HeartbeatMonitor", msg: "Patrol cycle started - scanning 24 sensors", type: "info" },
-    { t: 1200, agent: "HeartbeatMonitor", msg: "SEN-042 last_ping delta: 614s - threshold exceeded", type: "warn" },
-    { t: 2000, agent: "HeartbeatMonitor", msg: "SEN-042 flagged OFFLINE (severity: critical)", type: "error", sid: "SEN-042", ns: "offline" },
-    { t: 3400, agent: "DeadZoneMapper", msg: "Mapping dead zone around SEN-042...", type: "info" },
-    { t: 4600, agent: "DeadZoneMapper", msg: "RSSI neighbors: -71, -74, -68 dBm. Zone isolated.", type: "info" },
-    { t: 6000, agent: "RootCauseAnalyzer", msg: "Analyzing - battery:87%, router_load:68%, neighbors:3", type: "info" },
-    { t: 8200, agent: "RootCauseAnalyzer", msg: "cause: PHYSICAL_OBSTRUCTION  confidence: 78%", type: "success" },
-    { t: 9500, agent: "ReroutingAgent", msg: "RTR-002 load 68% > threshold. Scanning alternates...", type: "info" },
-    { t: 11000, agent: "ReroutingAgent", msg: "SEN-042 rerouted via RTR-003. Self-heal SUCCESS ✓", type: "success", sid: "SEN-042", ns: "degraded" },
+    { t: 0, agent: "PulseAgent", msg: "Patrol cycle started - scanning 24 sensors", type: "info" },
+    { t: 1200, agent: "PulseAgent", msg: "SEN-042 last_ping delta: 614s - threshold exceeded", type: "warn" },
+    { t: 2000, agent: "PulseAgent", msg: "SEN-042 flagged OFFLINE (severity: critical)", type: "error", sid: "SEN-042", ns: "offline" },
+    { t: 3400, agent: "DeadzoneAgent", msg: "Mapping dead zone around SEN-042...", type: "info" },
+    { t: 4600, agent: "DeadzoneAgent", msg: "RSSI neighbors: -71, -74, -68 dBm. Zone isolated.", type: "info" },
+    { t: 6000, agent: "CauseAgent", msg: "Analyzing - battery:87%, router_load:68%, neighbors:3", type: "info" },
+    { t: 8200, agent: "CauseAgent", msg: "cause: PHYSICAL_OBSTRUCTION  confidence: 78%", type: "success" },
+    { t: 9500, agent: "Rerout Agent", msg: "RTR-002 load 68% > threshold. Scanning alternates...", type: "info" },
+    { t: 11000, agent: "Rerout Agent", msg: "SEN-042 rerouted via RTR-003. Self-heal SUCCESS ✓", type: "success", sid: "SEN-042", ns: "degraded" },
     { t: 12800, agent: "DispatchAgent", msg: "Self-heal succeeded. No work order required.", type: "success" },
   ];
 
